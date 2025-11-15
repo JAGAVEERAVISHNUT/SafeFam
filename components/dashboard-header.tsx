@@ -31,31 +31,31 @@ export function DashboardHeader({ familyName, userName }: DashboardHeaderProps) 
 
   return (
     <header className="border-b bg-card">
-      <div className="container mx-auto px-4 py-4 max-w-7xl">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-shrink">
-            <Link href="/dashboard">
-              <h1 className="text-xl md:text-2xl font-bold text-primary">SafeFam</h1>
+      <div className="container mx-auto px-3 md:px-4 py-3 md:py-4 max-w-full overflow-hidden">
+        <div className="flex items-center justify-between gap-2 max-w-full">
+          <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-1 overflow-hidden">
+            <Link href="/dashboard" className="flex-shrink-0">
+              <h1 className="text-lg md:text-2xl font-bold text-primary whitespace-nowrap">SafeFam</h1>
             </Link>
-            <span className="hidden sm:inline text-muted-foreground">|</span>
-            <p className="hidden sm:block text-sm text-muted-foreground truncate">{familyName}</p>
+            <span className="hidden sm:inline text-muted-foreground flex-shrink-0">|</span>
+            <p className="hidden sm:block text-sm text-muted-foreground truncate min-w-0">{familyName}</p>
           </div>
 
-          <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
+          <div className="flex items-center gap-0.5 md:gap-1 flex-shrink-0">
             <Link href="/emergency">
-              <Button variant="destructive" size="sm" className="h-8 px-2 md:px-3">
-                <AlertCircle className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">Emergency</span>
+              <Button variant="destructive" size="sm" className="h-8 px-2 md:h-9 md:px-3 flex-shrink-0">
+                <AlertCircle className="h-4 w-4 md:mr-2 flex-shrink-0" />
+                <span className="hidden md:inline text-sm whitespace-nowrap">Emergency</span>
               </Button>
             </Link>
             
-            <Button variant="ghost" size="icon" className="h-8 w-8 md:h-10 md:w-10">
+            <Button variant="ghost" size="icon" className="h-8 w-8 md:h-10 md:w-10 flex-shrink-0">
               <Bell className="h-4 w-4 md:h-5 md:w-5" />
             </Button>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 md:h-10 md:w-10">
+                <Button variant="ghost" size="icon" className="h-8 w-8 md:h-10 md:w-10 flex-shrink-0">
                   <Settings className="h-4 w-4 md:h-5 md:w-5" />
                 </Button>
               </DropdownMenuTrigger>

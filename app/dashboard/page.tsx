@@ -42,59 +42,33 @@ export default function DashboardPage() {
   
   useEffect(() => {
     async function loadDashboard() {
-      let authUser = null;
-      let fetchFailed = false;
-      
       try {
         const supabase = createClient();
-        const authResponse = await supabase.auth.getUser();
         
-        if (authResponse.error) {
-          throw authResponse.error;
+        const authPromise = supabase.auth.getUser();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Auth timeout')), 5000)
+        );
+        
+        const authResponse = await Promise.race([authPromise, timeoutPromise]) as any;
+        
+        if (authResponse.error || !authResponse.data?.user) {
+          console.log("[v0] No authenticated user, redirecting to login");
+          router.push("/auth/login");
+          return;
         }
         
-        authUser = authResponse.data.user;
-      } catch (error: any) {
-        console.log("[v0] Auth check failed:", error?.message);
-        
-        // Check if it's a network/fetch error
-        if (
-          error?.message?.toLowerCase().includes('fetch') || 
-          error?.message?.toLowerCase().includes('failed') ||
-          error?.name === 'TypeError'
-        ) {
-          fetchFailed = true;
-        }
-      }
-      
-      // Enable demo mode if fetch failed
-      if (fetchFailed) {
-        console.log("[v0] Enabling demo mode - Supabase unavailable in preview");
-        setDemoMode(true);
-        setUser(DEMO_DATA.user);
-        setFamily(DEMO_DATA.family);
-        setMembers(DEMO_DATA.members);
-        setAppointments(DEMO_DATA.appointments);
-        setMedications(DEMO_DATA.medications);
-        setLoading(false);
-        return;
-      }
-      
-      if (!authUser) {
-        router.push("/auth/login");
-        return;
-      }
-      
-      try {
+        const authUser = authResponse.data.user;
         setUser(authUser);
-        const supabase = createClient();
 
         // Get user's family member record
-        const { data: userMember } = await supabase
+        const { data: userMember, error: memberError } = await supabase
           .from("family_members")
           .select("family_id, id")
           .eq("profile_id", authUser.id)
           .maybeSingle();
+
+        if (memberError) throw memberError;
 
         if (!userMember) {
           router.push("/onboarding");
@@ -102,21 +76,23 @@ export default function DashboardPage() {
         }
 
         // Get family details
-        const { data: familyData } = await supabase
+        const { data: familyData, error: familyError } = await supabase
           .from("families")
           .select("*")
           .eq("id", userMember.family_id)
           .maybeSingle();
         
+        if (familyError) throw familyError;
         setFamily(familyData);
 
         // Get all family members
-        const { data: membersData } = await supabase
+        const { data: membersData, error: membersError } = await supabase
           .from("family_members")
           .select("*")
           .eq("family_id", userMember.family_id)
           .order("is_primary_account", { ascending: false });
         
+        if (membersError) throw membersError;
         setMembers(membersData || []);
 
         // Get upcoming appointments (next 7 days)
@@ -151,17 +127,18 @@ export default function DashboardPage() {
           .limit(5);
         
         setMedications(medicationsData || []);
+        setLoading(false);
         
       } catch (error: any) {
-        console.log("[v0] Dashboard data fetch error:", error);
-        // Fallback to demo mode on any data fetch error
+        console.log("[v0] Error loading dashboard:", error?.message || error);
+        console.log("[v0] Enabling demo mode - Supabase unavailable");
+        
         setDemoMode(true);
         setUser(DEMO_DATA.user);
         setFamily(DEMO_DATA.family);
         setMembers(DEMO_DATA.members);
         setAppointments(DEMO_DATA.appointments);
         setMedications(DEMO_DATA.medications);
-      } finally {
         setLoading(false);
       }
     }
