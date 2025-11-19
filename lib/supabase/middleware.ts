@@ -44,7 +44,11 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Redirect authenticated users away from auth pages
+  if (request.nextUrl.pathname === "/auth/reset-password") {
+    return supabaseResponse;
+  }
+
+  // Redirect authenticated users away from auth pages (except reset-password)
   if (user && request.nextUrl.pathname.startsWith("/auth")) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
