@@ -19,6 +19,25 @@ interface UpcomingAppointmentsProps {
 }
 
 export function UpcomingAppointments({ appointments }: UpcomingAppointmentsProps) {
+  const formatAppointmentDateTime = (dateTimeString: string) => {
+    const [datePart, timePart] = dateTimeString.split('T');
+    const [year, month, day] = datePart.split('-');
+    const [hours, minutes] = timePart.split(':');
+    
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    const dateString = date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric' 
+    });
+    
+    const hour = parseInt(hours);
+    const isPM = hour >= 12;
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    const timeString = `${displayHour}:${minutes} ${isPM ? 'PM' : 'AM'}`;
+    
+    return `${dateString} at ${timeString}`;
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -49,7 +68,7 @@ export function UpcomingAppointments({ appointments }: UpcomingAppointmentsProps
                   <p className="text-xs text-muted-foreground">{appointment.family_members.full_name}</p>
                   <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                     <Clock className="h-3 w-3" />
-                    <span>{new Date(appointment.appointment_date).toLocaleString()}</span>
+                    <span>{formatAppointmentDateTime(appointment.appointment_date)}</span>
                   </div>
                   {appointment.location && (
                     <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">

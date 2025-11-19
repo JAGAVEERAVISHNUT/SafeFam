@@ -46,79 +46,103 @@ export function AppointmentsList({ appointments, members }: AppointmentsListProp
     }
   };
 
-  const AppointmentCard = ({ appointment }: { appointment: AppointmentWithMember }) => (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-start gap-3 flex-1">
-            <div className="h-10 w-10 rounded-full bg-green-50 flex items-center justify-center flex-shrink-0">
-              <Calendar className="h-5 w-5 text-green-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="font-semibold text-lg truncate">{appointment.title}</h3>
-                {getStatusBadge(appointment.status)}
+  const formatAppointmentDateTime = (dateTimeString: string) => {
+    const [datePart, timePart] = dateTimeString.split('T');
+    const [year, month, day] = datePart.split('-');
+    const [hours, minutes] = timePart.split(':');
+    
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    const dateString = date.toLocaleDateString('en-US', { 
+      month: 'long', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
+    
+    const hour = parseInt(hours);
+    const isPM = hour >= 12;
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    const timeString = `${displayHour}:${minutes} ${isPM ? 'PM' : 'AM'}`;
+    
+    return { dateString, timeString };
+  };
+
+  const AppointmentCard = ({ appointment }: { appointment: AppointmentWithMember }) => {
+    const { dateString, timeString } = formatAppointmentDateTime(appointment.appointment_date);
+    
+    return (
+      <Card className="hover:shadow-md transition-shadow">
+        <CardContent className="p-6">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-start gap-3 flex-1">
+              <div className="h-10 w-10 rounded-full bg-green-50 flex items-center justify-center flex-shrink-0">
+                <Calendar className="h-5 w-5 text-green-600" />
               </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <User className="h-4 w-4" />
-                <span>{appointment.family_members.full_name}</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="font-semibold text-lg truncate">{appointment.title}</h3>
+                  {getStatusBadge(appointment.status)}
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <User className="h-4 w-4" />
+                  <span>{appointment.family_members.full_name}</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="space-y-2 text-sm mb-4">
-          <p><span className="font-medium">Type:</span> {appointment.appointment_type}</p>
-          
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <span>{new Date(appointment.appointment_date).toLocaleDateString()}</span>
-            <Clock className="h-4 w-4 text-muted-foreground ml-2" />
-            <span>{new Date(appointment.appointment_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          <div className="space-y-2 text-sm mb-4">
+            <p><span className="font-medium">Type:</span> {appointment.appointment_type}</p>
+            
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span>{dateString}</span>
+              <Clock className="h-4 w-4 text-muted-foreground ml-2" />
+              <span>{timeString}</span>
+            </div>
+
+            {appointment.doctor_name && (
+              <p className="text-muted-foreground">
+                <span className="font-medium">Doctor:</span> Dr. {appointment.doctor_name}
+              </p>
+            )}
+
+            {appointment.location && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <MapPin className="h-4 w-4" />
+                <span className="truncate">{appointment.location}</span>
+              </div>
+            )}
+
+            {appointment.notes && (
+              <div className="flex items-start gap-2 text-muted-foreground pt-2 border-t">
+                <FileText className="h-4 w-4 mt-0.5" />
+                <p className="italic">{appointment.notes}</p>
+              </div>
+            )}
           </div>
 
-          {appointment.doctor_name && (
-            <p className="text-muted-foreground">
-              <span className="font-medium">Doctor:</span> Dr. {appointment.doctor_name}
-            </p>
-          )}
-
-          {appointment.location && (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <MapPin className="h-4 w-4" />
-              <span className="truncate">{appointment.location}</span>
-            </div>
-          )}
-
-          {appointment.notes && (
-            <div className="flex items-start gap-2 text-muted-foreground pt-2 border-t">
-              <FileText className="h-4 w-4 mt-0.5" />
-              <p className="italic">{appointment.notes}</p>
-            </div>
-          )}
-        </div>
-
-        <div className="flex gap-2 pt-4 border-t">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            onClick={() => setEditingAppointment(appointment)}
-          >
-            <Edit className="h-4 w-4 mr-1" />
-            Edit
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setDeletingAppointment(appointment)}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
+          <div className="flex gap-2 pt-4 border-t">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => setEditingAppointment(appointment)}
+            >
+              <Edit className="h-4 w-4 mr-1" />
+              Edit
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setDeletingAppointment(appointment)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
     <>
